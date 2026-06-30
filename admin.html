@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex,nofollow" />
+<title>Admin — Bordados da Mah</title>
+<style>
+  :root{
+    --cream:#f7efe1; --card:#fffdf8; --ink:#2d2419; --soft:#6b5d4a;
+    --green:#1d4e3f; --green-d:#143628; --copper:#b8895a; --gold:#d4a857;
+    --line:#e6dcc8; --alert:#c14d3a; --ok:#1f9d57; --track:#efe6d4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--cream);color:var(--ink);line-height:1.5}
+
+  /* LOGIN */
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:36px 30px;width:100%;max-width:360px;box-shadow:0 24px 60px -20px rgba(45,36,25,.2)}
+  .login-card h1{font-size:21px;color:var(--green-d);text-align:center;margin-bottom:4px}
+  .login-card p{font-size:13px;color:var(--soft);text-align:center;margin-bottom:24px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;color:var(--soft);font-weight:600;margin-bottom:6px}
+  .field input{width:100%;font-family:inherit;font-size:15px;border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;background:#fff;color:var(--ink)}
+  .field input:focus{outline:none;border-color:var(--copper)}
+  .login-btn{width:100%;background:var(--green);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
+  .login-btn:hover{background:var(--green-d)}
+  .login-btn:disabled{opacity:.6;cursor:default}
+  .login-err{color:var(--alert);font-size:13px;text-align:center;margin-top:14px;min-height:18px}
+
+  /* PAINEL */
+  #app{display:none;padding:24px 16px 60px}
+  .wrap{max-width:920px;margin:0 auto}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-bottom:6px}
+  h1.title{font-size:22px;font-weight:800;color:var(--green-d)}
+  .sub{color:var(--soft);font-size:13px;margin-bottom:22px}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  select,button.ctrl{font-family:inherit;font-size:13px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 12px;cursor:pointer}
+  button.primary{background:var(--green);color:#fff;border-color:var(--green);font-weight:600}
+  button.ctrl:hover{border-color:var(--copper)}
+  .toggle{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--soft)}
+  .logout{background:none;border:none;color:var(--soft);font-size:12px;text-decoration:underline;cursor:pointer}
+  .status{font-size:12px;color:var(--soft);margin:10px 2px 20px;display:flex;align-items:center;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
+  .dot.off{background:var(--copper)}
+
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+  @media(max-width:680px){.cards{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .kpi .label{font-size:12px;color:var(--soft);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .kpi .val{font-size:30px;font-weight:800;color:var(--green-d);margin-top:6px;font-variant-numeric:tabular-nums}
+  .kpi .hint{font-size:12px;color:var(--soft);margin-top:3px}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:22px}
+  .panel h2{font-size:15px;color:var(--green-d);margin-bottom:4px}
+  .panel .desc{font-size:12px;color:var(--soft);margin-bottom:18px}
+
+  .step{margin-bottom:14px}
+  .step-top{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:5px;gap:10px}
+  .step-name{color:var(--ink);font-weight:600}
+  .step-idx{color:var(--soft);font-weight:400;margin-right:6px}
+  .step-nums{color:var(--soft);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .bar{height:26px;background:var(--track);border-radius:8px;overflow:hidden}
+  .fill{height:100%;background:linear-gradient(90deg,var(--green),var(--copper));border-radius:8px;transition:width .5s ease;min-width:2px}
+  .drop{font-size:12px;font-weight:600;color:var(--alert);margin-left:8px}
+  .drop.zero{color:var(--soft);font-weight:400}
+  .drop.worst{background:var(--alert);color:#fff;padding:1px 7px;border-radius:99px}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line)}
+  th{color:var(--soft);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:none}
+
+  .err{background:#fff4e6;border:1px solid var(--gold);border-radius:14px;padding:18px;font-size:14px;color:var(--ink);margin-bottom:22px}
+  .err b{color:var(--alert)}
+  code{background:#efe6d4;padding:2px 6px;border-radius:5px;font-size:12px}
+  .muted{color:var(--soft)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <form class="login-card" id="loginForm">
+    <h1>🔒 Painel Admin</h1>
+    <p>Bordados da Mah — acesso restrito</p>
+    <div class="field">
+      <label>Usuário</label>
+      <input type="text" id="user" autocomplete="username" autofocus />
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="pass" autocomplete="current-password" />
+    </div>
+    <button class="login-btn" type="submit" id="loginBtn">Entrar</button>
+    <div class="login-err" id="loginErr"></div>
+  </form>
+</div>
+
+<!-- PAINEL -->
+<div id="app">
+  <div class="wrap">
+    <header>
+      <h1 class="title">📊 Painel do Quiz</h1>
+      <div class="controls">
+        <select id="funnel" title="Funil / variante">
+          <option value="quizz">/quizz</option>
+          <option value="quiz">/quiz</option>
+          <option value="quizz47">/quizz47</option>
+          <option value="quizz97">/quizz97</option>
+          <option value="quizzttk">/quizzttk</option>
+          <option value="quizzespanhol">/quizzespanhol</option>
+          <option value="quizzrusso">/quizzrusso</option>
+        </select>
+        <label class="toggle"><input type="checkbox" id="auto" checked /> Auto (15s)</label>
+        <button class="ctrl primary" id="refresh">Atualizar</button>
+        <button class="logout" id="logout">sair</button>
+      </div>
+    </header>
+    <div class="sub">Desempenho do funil em tempo real — quantas pessoas iniciam, onde abandonam e quantas completam.</div>
+
+    <div class="status"><span class="dot" id="dot"></span><span id="statusText">Carregando…</span></div>
+    <div id="errBox"></div>
+
+    <div class="cards">
+      <div class="kpi"><div class="label">Iniciaram</div><div class="val" id="kStarts">—</div><div class="hint">abriram o quiz</div></div>
+      <div class="kpi"><div class="label">Completaram</div><div class="val" id="kDone">—</div><div class="hint">chegaram ao fim</div></div>
+      <div class="kpi"><div class="label">Conclusão</div><div class="val" id="kRate">—</div><div class="hint">% que terminou</div></div>
+      <div class="kpi"><div class="label">Checkout</div><div class="val" id="kCk">—</div><div class="hint">clicaram em comprar</div></div>
+    </div>
+
+    <div class="panel">
+      <h2>Funil de abandono</h2>
+      <div class="desc">Cada barra é uma etapa. A largura mostra quantos chegaram ali. O número em vermelho é quanto caiu da etapa anterior — onde estiver o maior vermelho, é onde você perde mais gente.</div>
+      <div id="funnelView"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Detalhe por etapa</h2>
+      <div class="desc">Pessoas = visitantes distintos que viram a etapa.</div>
+      <table>
+        <thead><tr><th>#</th><th>Etapa</th><th class="num">Pessoas</th><th class="num">% do início</th><th class="num">Abandono</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="status muted" id="updated"></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const SK = "bdm_admin_cred";   // guarda credenciais só na sessão da aba
+let timer = null;
+
+function cred(){ try{ return JSON.parse(sessionStorage.getItem(SK)||"null"); }catch{ return null; } }
+function headers(){ const c = cred()||{}; return { "x-admin-user": c.user||"", "x-admin-pass": c.pass||"" }; }
+
+/* ===== Login (validado no servidor) ===== */
+$("loginForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const user = $("user").value.trim();
+  const pass = $("pass").value;
+  $("loginBtn").disabled = true; $("loginErr").textContent = "Entrando…";
+  try{
+    const r = await fetch(`/api/stats?funnel=${encodeURIComponent($("funnel").value)}`, {
+      headers: { "x-admin-user": user, "x-admin-pass": pass }
+    });
+    if(r.status === 401){ $("loginErr").textContent = "Usuário ou senha incorretos."; $("pass").value=""; return; }
+    if(r.status === 503){ $("loginErr").textContent = "Defina ADMIN_PASS nas variáveis da Vercel."; return; }
+    if(!r.ok){ $("loginErr").textContent = "Erro ("+r.status+"). Tente de novo."; return; }
+    sessionStorage.setItem(SK, JSON.stringify({ user, pass }));
+    $("loginErr").textContent = "";
+    enter(await r.json());
+  }catch(err){
+    $("loginErr").textContent = "Sem conexão com o servidor.";
+  }finally{
+    $("loginBtn").disabled = false;
+  }
+});
+
+function enter(initial){
+  $("login").style.display="none";
+  $("app").style.display="block";
+  if(initial) render(initial), setStatus("ok","Conectado"), stamp();
+  else load();
+  setupAuto();
+}
+$("logout").addEventListener("click", ()=>{ sessionStorage.removeItem(SK); location.reload(); });
+
+/* já logado nesta aba? tenta entrar direto */
+if(cred()) load(true);
+
+/* ===== Dashboard ===== */
+async function load(silentLogin){
+  if(!cred()) return;
+  setStatus("loading","Atualizando…");
+  try{
+    const r = await fetch(`/api/stats?funnel=${encodeURIComponent($("funnel").value)}`, { headers: headers() });
+    if(r.status === 401){ sessionStorage.removeItem(SK); return location.reload(); }
+    if(r.status === 503){ return showErr("Defina <code>ADMIN_PASS</code> nas variáveis de ambiente da Vercel."); }
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const d = await r.json();
+    if(silentLogin){ $("login").style.display="none"; $("app").style.display="block"; setupAuto(); }
+    if(d.kv === false){ return showErr("Conecte o <b>Vercel KV</b> ao projeto (Storage → Create → KV) e dê redeploy. Sem isso não há onde contar os visitantes."); }
+    render(d); $("errBox").innerHTML=""; setStatus("ok","Conectado"); stamp();
+  }catch(e){
+    setStatus("off","Erro");
+    showErr("Não consegui ler as métricas: "+e.message);
+  }
+}
+function showErr(html){ $("errBox").innerHTML = `<div class="err">${html}</div>`; }
+function stamp(){ $("updated").textContent = "Atualizado às " + new Date().toLocaleTimeString("pt-BR"); }
+
+function render(d){
+  $("kStarts").textContent = fmt(d.starts);
+  $("kDone").textContent   = fmt(d.completions);
+  $("kRate").textContent   = (d.completion_rate ?? 0) + "%";
+  $("kCk").textContent     = fmt(d.checkout_clicks);
+  const steps = d.steps || [];
+  let worst=-1, worstDrop=-1;
+  for(let i=1;i<steps.length;i++){ const drop=steps[i-1].leads-steps[i].leads; if(drop>worstDrop){worstDrop=drop;worst=i;} }
+  $("funnelView").innerHTML = steps.map((s,i)=>{
+    const prev=i>0?steps[i-1].leads:null;
+    const drop=prev!=null?prev-s.leads:0;
+    const dropPct=prev?Math.round(100*drop/prev):0;
+    let dh="";
+    if(i>0){ const cls=drop<=0?"drop zero":(i===worst?"drop worst":"drop"); dh=`<span class="${cls}">${drop>0?`↓ ${fmt(drop)} (${dropPct}%)`:"—"}</span>`; }
+    return `<div class="step"><div class="step-top">
+      <span class="step-name"><span class="step-idx">${s.index}</span>${esc(s.name)}</span>
+      <span class="step-nums">${fmt(s.leads)} pessoas · ${s.pct}% ${dh}</span>
+    </div><div class="bar"><div class="fill" style="width:${Math.max(s.pct,1)}%"></div></div></div>`;
+  }).join("") || `<div class="muted">Sem dados ainda. Assim que alguém percorrer o quiz, aparece aqui.</div>`;
+  $("tbody").innerHTML = steps.map((s,i)=>{
+    const prev=i>0?steps[i-1].leads:null; const drop=prev!=null?prev-s.leads:0;
+    return `<tr><td>${s.index}</td><td>${esc(s.name)}</td><td class="num">${fmt(s.leads)}</td><td class="num">${s.pct}%</td><td class="num">${i===0?"—":(drop>0?fmt(drop):"0")}</td></tr>`;
+  }).join("");
+}
+function setStatus(state,text){ $("statusText").textContent=text; $("dot").className="dot"+(state==="ok"?"":" off"); }
+function fmt(n){ return (n??0).toLocaleString("pt-BR"); }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function setupAuto(){ if(timer)clearInterval(timer); if($("auto").checked) timer=setInterval(()=>load(), 15000); }
+$("refresh").onclick=()=>load(); $("funnel").onchange=()=>load(); $("auto").onchange=setupAuto;
+</script>
+</body>
+</html>
